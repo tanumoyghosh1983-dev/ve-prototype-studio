@@ -18,11 +18,15 @@
 html,body{height:100%;}
 body{
   font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-  background:var(--bg); color:var(--ink);
+  background-color:var(--bg); color:var(--ink);
+  background-image:
+    linear-gradient(rgba(23,19,11,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23,19,11,.02) 1px, transparent 1px);
+  background-size:2px 2px;
   -webkit-font-smoothing:antialiased;
   min-height:100vh;
 }
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&family=Space+Mono:wght@400;700&display=swap');
 h1,h2,h3,.brand,.phone-label{font-family:'Space Grotesk',sans-serif;}
 
 /* ---------- Layout shell ---------- */
@@ -48,10 +52,14 @@ main{padding:64px 0 100px;}
 }
 .stage-eyebrow::before{content:''; width:24px; height:2px; background:var(--coral); display:inline-block;}
 h1.hero{
-  font-size:clamp(34px,4.6vw,58px); font-weight:700; line-height:1.03; letter-spacing:-.03em;
+  font-size:clamp(34px,4.6vw,58px); font-weight:800; line-height:1.05; letter-spacing:-.03em;
   max-width:820px; margin-bottom:20px;
 }
-h1.hero em{font-style:normal; color:var(--coral);}
+h1.hero em{
+  font-style:normal; position:relative; z-index:1; display:inline-block;
+  background-image:linear-gradient(var(--butter), var(--butter));
+  background-repeat:no-repeat; background-size:100% 40%; background-position:0 88%;
+}
 .hero-sub{font-size:18px; color:var(--ink-60); max-width:600px; line-height:1.5; margin-bottom:44px;}
 
 .prompt-panel{
@@ -191,32 +199,47 @@ h1.hero em{font-style:normal; color:var(--coral);}
 }
 
 .cta-panel{
-  margin-top:16px; background:var(--ink); color:var(--bg); border-radius:24px; padding:24px;
-  box-shadow:var(--shadow-tile);
+  margin-top:16px; background:var(--butter); color:var(--ink); border-radius:24px; padding:26px;
+  box-shadow:var(--shadow-tile); position:relative; overflow:hidden;
 }
+.cta-panel .eyebrow2{
+  font-family:'Space Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:rgba(23,19,11,.55); margin-bottom:10px;
+}
+.cta-panel h4{font-size:19px; font-weight:800; margin-bottom:8px; font-family:'Space Grotesk',sans-serif;}
+.cta-panel p{font-size:13px; color:rgba(23,19,11,.65); line-height:1.5; margin-bottom:20px;}
+.cta-panel .cta-bottom-row{display:flex; align-items:center; justify-content:space-between;}
+.cta-panel a{
+  display:inline-flex; align-items:center; gap:0; color:var(--ink);
+  text-decoration:none; font-size:13.5px; font-weight:700;
+}
+.cta-panel .arrow-circle{
+  width:38px; height:38px; border-radius:50%; background:var(--ink); color:var(--butter);
+  display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;
+  transition:transform .15s ease;
+}
+.cta-panel a:hover .arrow-circle{transform:translateX(3px);}
 
 .feature-panel{
-  margin-top:16px; background:var(--tile); border:1px solid var(--tile-line); border-radius:24px;
-  padding:20px; box-shadow:var(--shadow-tile);
+  margin-top:16px; background:var(--mint); border:1px solid rgba(23,19,11,.08); border-radius:24px;
+  padding:22px; box-shadow:var(--shadow-tile);
 }
-.feature-panel h4{font-size:14.5px; font-weight:700; color:var(--ink); margin-bottom:6px;}
-.feature-panel p{font-size:12.5px; color:var(--ink-60); line-height:1.4; margin-bottom:12px;}
+.feature-panel .eyebrow2{
+  font-family:'Space Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:rgba(23,19,11,.55); margin-bottom:10px;
+}
+.feature-panel h4{font-size:16px; font-weight:800; color:var(--ink); margin-bottom:6px; font-family:'Space Grotesk',sans-serif;}
+.feature-panel p{font-size:12.5px; color:rgba(23,19,11,.65); line-height:1.4; margin-bottom:14px;}
 .feature-panel textarea{
-  width:100%; border:1px solid var(--tile-line); border-radius:12px; background:var(--paper);
+  width:100%; border:1px solid rgba(23,19,11,.12); border-radius:12px; background:var(--paper);
   padding:11px 13px; font-family:'Inter',sans-serif; font-size:13px; resize:none; outline:none;
   color:var(--ink);
 }
 .feature-panel textarea::placeholder{color:var(--ink-40);}
-.feature-panel textarea:focus{border-color:var(--coral);}
-.feature-panel-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;}
-.feature-hint{font-size:11.5px; color:var(--ink-40); flex:1;}
+.feature-panel textarea:focus{border-color:var(--ink);}
+.feature-panel-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;}
+.feature-hint{font-size:11.5px; color:rgba(23,19,11,.55); flex:1;}
 .feature-hint.error{color:#B8452E;}
-.cta-panel h4{font-size:17px; font-weight:700; margin-bottom:8px; font-family:'Space Grotesk',sans-serif;}
-.cta-panel p{font-size:13.5px; color:rgba(244,242,235,.7); line-height:1.5; margin-bottom:18px;}
-.cta-panel a{
-  display:inline-flex; align-items:center; gap:7px; background:var(--coral); color:#fff;
-  padding:11px 20px; border-radius:100px; text-decoration:none; font-size:13.5px; font-weight:600;
-}
 
 /* Error state */
 .error-box{
@@ -254,6 +277,40 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   .top-inner,.wrap{padding-left:20px; padding-right:20px;}
   .phone-shell{width:100%; max-width:320px;}
 }
+
+/* Lead capture modal */
+.lead-overlay{
+  position:fixed; inset:0; background:rgba(23,19,11,.5); z-index:100;
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.lead-overlay.active{display:flex;}
+.lead-modal{
+  background:var(--paper); border-radius:24px; padding:32px; width:100%; max-width:420px;
+  position:relative; box-shadow:0 30px 70px -20px rgba(23,19,11,.4);
+}
+.lead-close{
+  position:absolute; top:18px; right:18px; width:32px; height:32px; border-radius:50%;
+  border:none; background:var(--bg); color:var(--ink); font-size:14px; cursor:pointer;
+}
+.lead-modal .eyebrow2{
+  font-family:'Space Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--ink-40); margin-bottom:10px;
+}
+.lead-modal h3{font-size:22px; font-weight:800; margin-bottom:8px;}
+.lead-modal p{font-size:13.5px; color:var(--ink-60); margin-bottom:20px; line-height:1.4;}
+.lead-modal form{display:flex; flex-direction:column; gap:10px;}
+.lead-modal input, .lead-modal textarea{
+  width:100%; border:1px solid var(--ink-15); border-radius:12px; padding:12px 14px;
+  font-family:'Inter',sans-serif; font-size:14px; outline:none; resize:none; color:var(--ink);
+}
+.lead-modal input:focus, .lead-modal textarea:focus{border-color:var(--coral);}
+.lead-submit{
+  margin-top:6px; padding:13px; border:none; border-radius:100px; background:var(--ink);
+  color:var(--bg); font-weight:700; font-size:14px; cursor:pointer; font-family:'Inter',sans-serif;
+}
+.lead-submit:hover{background:var(--coral);}
+.lead-success{display:none; text-align:center; padding:20px 0;}
+.lead-success.active{display:block;}
 </style>
 </head>
 <body>
@@ -261,14 +318,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
 <header class="top">
   <div class="top-inner">
     <div class="brand"><span class="dot"></span>VirtualEmployee<small>Prototype Studio</small></div>
-    <a class="top-cta" href="#" onclick="return false;">Talk to VE →</a>
+    <a class="top-cta" href="#" onclick="openLeadModal(); return false;">Talk to VE →</a>
   </div>
 </header>
 
 <main class="wrap">
-  <div class="stage-eyebrow">Prompt to Prototype</div>
-  <h1 class="hero">Describe your app.<br>Watch it come <em>alive</em>.</h1>
-  <p class="hero-sub">Type a plain-English idea for your mobile app. Our AI will design and build an interactive, clickable prototype in seconds — no design files, no dev team, no waiting.</p>
+  <h1 class="hero">Create Your App Prototype<br>in Just <em>10 Seconds</em></h1>
+  <p class="hero-sub">Ideas are hard to explain. Create a free prototype that shows exactly what you have in mind, so we spend less time interpreting your idea and more time developing it.</p>
 
   <div class="prompt-panel">
     <textarea id="promptInput" placeholder="e.g. A grocery delivery app where users browse by aisle, build a cart, and track their rider on a live map..."></textarea>
@@ -355,6 +411,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
         <div id="screenList" class="screen-chip-grid"></div>
 
         <div class="feature-panel">
+          <div class="eyebrow2">Iterate</div>
           <h4>Add a feature</h4>
           <p>Describe something to add — it'll build on what you already have, without starting over.</p>
           <textarea id="featureInput" placeholder="e.g. add a loyalty rewards program" rows="2"></textarea>
@@ -368,9 +425,13 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
         </div>
 
         <div class="cta-panel">
+          <div class="eyebrow2">Next step</div>
           <h4>Like where this is going?</h4>
           <p>This is a simulated prototype — the real thing includes working backends, integrations, and production-grade engineering. Let's scope it together.</p>
-          <a href="#" onclick="return false;">Request a proposal →</a>
+          <div class="cta-bottom-row">
+            <a href="#" onclick="openLeadModal(); return false;">Request a proposal</a>
+            <div class="arrow-circle">→</div>
+          </div>
         </div>
       </div>
     </div>
@@ -384,10 +445,47 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
   </div>
 </footer>
 
+<div class="lead-overlay" id="leadOverlay" onclick="if(event.target===this) closeLeadModal();">
+  <div class="lead-modal">
+    <button class="lead-close" onclick="closeLeadModal()" aria-label="Close">✕</button>
+    <div class="eyebrow2">Let's talk</div>
+    <h3>Tell us about your project</h3>
+    <p>Share a few details and someone from VE will follow up.</p>
+    <form id="leadForm" onsubmit="submitLeadForm(event)">
+      <input type="text" name="name" placeholder="Your name" required>
+      <input type="email" name="email" placeholder="Work email" required>
+      <input type="text" name="company" placeholder="Company (optional)">
+      <textarea name="message" placeholder="What are you looking to build?" rows="3"></textarea>
+      <button type="submit" class="lead-submit">Send request</button>
+    </form>
+    <div class="lead-success" id="leadSuccess">
+      <div style="font-size:32px;">✅</div>
+      <div style="font-weight:700; margin-top:10px;">Thanks — we'll be in touch shortly.</div>
+    </div>
+  </div>
+</div>
+
 <script>
 let appData = null;
 let navStack = [];
 let currentScreenId = null;
+
+function openLeadModal(){
+  document.getElementById('leadOverlay').classList.add('active');
+  document.getElementById('leadForm').style.display = '';
+  document.getElementById('leadSuccess').classList.remove('active');
+}
+function closeLeadModal(){
+  document.getElementById('leadOverlay').classList.remove('active');
+}
+function submitLeadForm(e){
+  e.preventDefault();
+  // No backend endpoint specified for this form yet — show a confirmation
+  // state so the interaction feels complete. Wire to a real endpoint when
+  // one is available.
+  document.getElementById('leadForm').style.display = 'none';
+  document.getElementById('leadSuccess').classList.add('active');
+}
 
 function fillPrompt(el){
   document.getElementById('promptInput').value = el.textContent;
