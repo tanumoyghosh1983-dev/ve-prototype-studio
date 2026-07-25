@@ -22,13 +22,14 @@ SHAPE A — if the input IS a describable app idea:
       "components": [
         {"kind": "header", "text": "..."},
         {"kind": "text", "text": "...", "style": "heading|body|caption"},
-        {"kind": "card", "title": "...", "subtitle": "...", "image_emoji": "an emoji representing this item", "navTo": "screen_id or null"},
+        {"kind": "card", "title": "...", "subtitle": "...", "image_query": "2-4 word real-world photo subject, e.g. 'margherita pizza' or 'modern apartment interior' or 'woman running outdoors'", "navTo": "screen_id or null"},
         {"kind": "button", "label": "...", "navTo": "screen_id", "style": "primary|secondary"},
         {"kind": "input", "placeholder": "..."},
         {"kind": "list_row", "title": "...", "subtitle": "...", "trailing": "...", "navTo": "screen_id or null"},
         {"kind": "stat", "value": "...", "label": "..."},
         {"kind": "tabbar", "items": ["Home","Search","Cart","Profile"], "navMap": {"Home":"screen_id","Search":"screen_id"}},
-        {"kind": "image_banner", "image_emoji": "emoji", "caption": "..."},
+        {"kind": "image_banner", "image_query": "2-4 word real-world photo subject matching this screen's content", "caption": "...", "full_bleed": true},
+        {"kind": "avatar", "image_query": "portrait of a person, e.g. 'smiling woman portrait' or 'professional headshot man'", "size": "small|medium|large"},
         {"kind": "map_placeholder", "caption": "..."},
         {"kind": "divider"},
         {"kind": "spacer"}
@@ -73,12 +74,54 @@ RULES FOR SHAPE A (valid app ideas):
 - Include a tabbar component on every "main" screen (the ones reachable from other main screens) for realistic, consistent navigation, with 3-5 items.
 - Keep each screen to 6-14 components so it fits a phone screen reasonably.
 - The first screen in the array should match startScreen.
+- Use "card" and "image_banner" components generously wherever a real app would show a photo (food items, properties, profile pictures, product photos, workout scenes, travel destinations, etc.) — this is a photo-realistic mockup, not an icon-based wireframe. Every image_query must be a concrete, photographable real-world subject (2-4 words), never an abstract concept, emoji description, or icon name.
+- Use "avatar" for any person's profile picture (user avatars, driver photos, reviewer photos, doctor photos, etc.) instead of a generic icon.
+- Home/feed/list screens should typically have 3-5 image-bearing cards; detail screens should typically open with a large image_banner.
 
 Output ONLY the JSON object, nothing else.`;
 
 const CONCISE_ADDENDUM = `
 
 IMPORTANT ADDITIONAL CONSTRAINT: Your previous attempt at this ran out of space before finishing. This time, be more concise: use exactly 5 screens, keep each screen to 6-8 components maximum, and keep all text fields short. Prioritize finishing the JSON completely over including every detail.`;
+
+const EDIT_SYSTEM_PROMPT = `You are a senior product designer adding a new feature to an EXISTING mobile app prototype. You will be given the current prototype as JSON, and a plain-English description of a feature to add.
+
+CRITICAL RULES — these are non-negotiable:
+- You MUST keep every existing screen's "id" exactly as it is. NEVER rename, remove, or merge an existing screen id.
+- You MUST keep every existing screen's existing components — you may ADD new components to an existing screen (e.g. a new button or tab linking to the new feature), but never delete or rewrite content that was already there.
+- You MAY add brand new screens for the new feature.
+- You MAY add new navTo links from existing screens/tabbars to the new screens, to make the new feature reachable.
+- Do not change appName or primaryColor unless the requested feature specifically implies a rebrand (it almost never does — leave them as-is).
+
+Respond with ONLY valid JSON, no markdown fences, no preamble, in this exact shape:
+{
+  "isValidAppIdea": true,
+  "appName": "same as before unless truly warranted",
+  "primaryColor": "same as before unless truly warranted",
+  "screens": [ ...ALL original screens (unchanged except possibly new components added), PLUS any new screens for the feature... ],
+  "startScreen": "same as before"
+}
+
+Use the same component schema as before: header, text, card (with image_query), button, input, list_row, stat, tabbar, image_banner (with image_query, full_bleed), avatar (with image_query, size), map_placeholder, divider, spacer. Every image_query must be a concrete, photographable real-world subject (2-4 words).
+
+If the requested feature is too vague or nonsensical to add (e.g. "make it better" or "idk something cool"), respond instead with:
+{"isValidAppIdea": false, "reason": "...", "suggestion": "a concrete feature example, phrased as a ready-to-use request"}
+
+Output ONLY the JSON object, nothing else.`;
+
+// Verifies that an edited prototype didn't lose or rename any screen that
+// existed in the original. This is the one check that actually matters for
+// "add a feature" requests — an LLM re-generating a large JSON blob can
+// easily rename a screen id in passing, which would silently break every
+// button that pointed to it (our dangling-nav safety net would "fix" that
+// by redirecting to Home, which is a silently WRONG result, not a crash).
+// Rejecting the whole edit and telling the user plainly beats that.
+function editPreservesOriginalScreens(originalScreens, newScreens) {
+  const originalIds = new Set((originalScreens || []).map((s) => s.id));
+  const newIds = new Set((newScreens || []).map((s) => s.id));
+  const missing = [...originalIds].filter((id) => !newIds.has(id));
+  return { valid: missing.length === 0, missingIds: missing };
+}
 
 // Attempts to repair JSON that was cut off mid-structure (a common symptom of
 // hitting the model's output token limit). Truncation almost always happens
@@ -239,9 +282,11 @@ exports.handler = async function (event) {
   }
 
   let prompt;
+  let existingPrototype = null;
   try {
     const body = JSON.parse(event.body || "{}");
     prompt = (body.prompt || "").trim();
+    existingPrototype = body.existingPrototype || null;
   } catch (e) {
     return {
       statusCode: 400,
@@ -266,8 +311,18 @@ exports.handler = async function (event) {
     };
   }
 
+  const isEditMode = !!(
+    existingPrototype &&
+    Array.isArray(existingPrototype.screens) &&
+    existingPrototype.screens.length > 0
+  );
+
   const model = "gemini-3.5-flash";
-  const basePromptText = `${SYSTEM_PROMPT}\n\nApp idea: ${prompt}`;
+  const basePromptText = isEditMode
+    ? `${EDIT_SYSTEM_PROMPT}\n\nExisting prototype:\n${JSON.stringify(
+        existingPrototype
+      )}\n\nFeature to add: ${prompt}`
+    : `${SYSTEM_PROMPT}\n\nApp idea: ${prompt}`;
 
   try {
     // Attempt 1: normal generation.
@@ -331,6 +386,27 @@ exports.handler = async function (event) {
       !parsed.startScreen
     ) {
       throw new Error("Generated prototype was missing required fields");
+    }
+
+    // EDIT MODE ONLY: verify no original screen was renamed or dropped.
+    // This is the one check that actually protects against the realistic
+    // failure mode of "add a feature" edits — an LLM re-generating a large
+    // JSON blob can rename a screen id in passing, which would silently
+    // break every existing button that pointed to it. Our dangling-nav
+    // safety net further below would "fix" that by redirecting to Home,
+    // which is a silently WRONG result, not a crash — so we catch it here
+    // instead and tell the person plainly rather than serve something subtly
+    // broken.
+    if (isEditMode) {
+      const integrity = editPreservesOriginalScreens(
+        existingPrototype.screens,
+        parsed.screens
+      );
+      if (!integrity.valid) {
+        throw new Error(
+          "That edit would have changed part of your existing prototype in a way we couldn't verify as safe, so nothing was changed. Please try rephrasing the feature request, or try again."
+        );
+      }
     }
 
     // If repair had to trim the tail of the screens array, the last screen
