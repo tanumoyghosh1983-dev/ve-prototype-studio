@@ -104,7 +104,7 @@ exports.handler = async function (event) {
 
   // Gemini's native REST endpoint. Auth via x-goog-api-key header works for
   // both legacy "AIza..." standard keys and the newer "AQ." auth keys.
-  const model = "gemini-2.5-flash";
+  const model = "gemini-3.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   try {
