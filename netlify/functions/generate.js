@@ -155,7 +155,7 @@ exports.handler = async function (event) {
         ],
         generationConfig: {
           temperature: 0.9,
-          maxOutputTokens: 4000,
+          maxOutputTokens: 8000,
           responseMimeType: "application/json",
         },
       }),
@@ -193,10 +193,21 @@ exports.handler = async function (event) {
       parsed = JSON.parse(cleaned);
     } catch (e) {
       const match = cleaned.match(/\{[\s\S]*\}/);
+      let recovered = false;
       if (match) {
-        parsed = JSON.parse(match[0]);
-      } else {
-        throw new Error("Could not parse model output as JSON");
+        try {
+          parsed = JSON.parse(match[0]);
+          recovered = true;
+        } catch (e2) {
+          recovered = false;
+        }
+      }
+      if (!recovered) {
+        // Most likely cause: the response was cut off before finishing
+        // (a very detailed/multi-feature app idea can run long).
+        throw new Error(
+          "That idea generated a longer response than usual and got cut off. Try again, or simplify the description slightly."
+        );
       }
     }
 
