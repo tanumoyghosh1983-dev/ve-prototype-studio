@@ -1,0 +1,9 @@
+{
+  "name": "ve-prototype-studio-gemini",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VirtualEmployee.com Prototype Studio — prompt-to-prototype tool, powered by Google Gemini",
+  "engines": {
+    "node": ">=18"
+  }
+}
