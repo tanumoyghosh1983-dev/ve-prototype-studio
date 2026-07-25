@@ -5,9 +5,13 @@
 
 const SYSTEM_PROMPT = `You are a senior product designer generating a JSON specification for an interactive mobile app prototype based on a user's plain-English description. This will be rendered as clickable HTML/CSS screens inside a phone frame.
 
-Respond with ONLY valid JSON, no markdown fences, no preamble, matching this exact schema:
+FIRST, decide whether the user's input actually describes an app concept you can design screens for. It does NOT if it is: a question about this tool itself, a greeting, a single vague word, gibberish, or anything you cannot turn into a specific mobile app.
 
+Respond with ONLY valid JSON, no markdown fences, no preamble, in ONE of these two shapes:
+
+SHAPE A — if the input IS a describable app idea:
 {
+  "isValidAppIdea": true,
   "appName": "string, short catchy app name",
   "primaryColor": "#hexcolor - pick a color that fits the app's domain, NOT necessarily orange/coral",
   "screens": [
@@ -34,7 +38,34 @@ Respond with ONLY valid JSON, no markdown fences, no preamble, matching this exa
   "startScreen": "screen_id of first screen"
 }
 
-Rules:
+SHAPE B — if the input is NOT a describable app idea:
+{
+  "isValidAppIdea": false,
+  "reason": "one short, plain-English sentence explaining why this isn't an app idea",
+  "suggestion": "one short, plain-English example app idea the user could try instead, written as a ready-to-use prompt"
+}
+
+EXAMPLES (learn the boundary from these):
+
+Input: "what kind of app can you build?"
+Output: {"isValidAppIdea": false, "reason": "That's a question about this tool, not a description of an app.", "suggestion": "Try something like: a food delivery app with live order tracking"}
+
+Input: "help"
+Output: {"isValidAppIdea": false, "reason": "That's too vague to design screens from.", "suggestion": "Try something like: a fitness app with workout plans and progress charts"}
+
+Input: "hi"
+Output: {"isValidAppIdea": false, "reason": "That's a greeting, not an app idea.", "suggestion": "Try something like: a ride-hailing app like Uber"}
+
+Input: "asdkfjasdf"
+Output: {"isValidAppIdea": false, "reason": "That doesn't describe anything I can design around.", "suggestion": "Try something like: a marketplace app for renting furniture"}
+
+Input: "a ride-hailing app like Uber"
+Output: {"isValidAppIdea": true, "appName": "GoNow", "primaryColor": "#000000", "startScreen": "home", "screens": [...full screens array...]}
+
+Input: "an app for booking hair salon appointments"
+Output: {"isValidAppIdea": true, "appName": "SlotWise", "primaryColor": "#8E44AD", "startScreen": "home", "screens": [...full screens array...]}
+
+RULES FOR SHAPE A (valid app ideas):
 - Generate 5-9 screens that form a coherent, navigable flow specific to the user's app idea (not generic).
 - Every interactive element (card, button, list_row) that logically leads somewhere should have a navTo pointing to a real screen id in your screens array.
 - Every tabbar item's navMap target must also be a real screen id in your screens array. Never reference a screen id that isn't in your screens list.
@@ -42,7 +73,8 @@ Rules:
 - Include a tabbar component on every "main" screen (the ones reachable from other main screens) for realistic, consistent navigation, with 3-5 items.
 - Keep each screen to 6-14 components so it fits a phone screen reasonably.
 - The first screen in the array should match startScreen.
-- Output ONLY the JSON object, nothing else.`;
+
+Output ONLY the JSON object, nothing else.`;
 
 exports.handler = async function (event) {
   const headers = {
@@ -168,6 +200,27 @@ exports.handler = async function (event) {
       }
     }
 
+    if (typeof parsed.isValidAppIdea !== "boolean") {
+      throw new Error("Model response was missing the isValidAppIdea field");
+    }
+
+    if (parsed.isValidAppIdea === false) {
+      // Not an app idea — return a friendly, structured "try again" response.
+      // This is a normal, expected outcome, not an error condition.
+      return {
+        statusCode: 200,
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isValidAppIdea: false,
+          reason: parsed.reason || "That doesn't look like an app idea yet.",
+          suggestion:
+            parsed.suggestion ||
+            "Try something like: a food delivery app with live order tracking",
+        }),
+      };
+    }
+
+    // isValidAppIdea === true from here on — validate it's a usable prototype.
     if (
       !parsed.screens ||
       !Array.isArray(parsed.screens) ||
