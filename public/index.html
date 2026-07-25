@@ -124,21 +124,33 @@ h1.hero em{font-style:normal; color:var(--coral);}
 .build-area{display:grid; grid-template-columns:340px 320px; gap:32px; align-items:start; justify-content:center;}
 @media(max-width:900px){.build-area{grid-template-columns:1fr;}}
 
-/* Phone frame */
+/* Phone frame — iPhone 15/16 Pro style: thin titanium bezel, Dynamic Island,
+   visible side buttons, correct corner radii */
 .phone-shell{
-  background:var(--ink); border-radius:44px; padding:14px; width:320px; margin:0 auto;
-  box-shadow:0 24px 56px -20px rgba(23,19,11,.32), 0 4px 12px -4px rgba(23,19,11,.18);
+  position:relative; background:linear-gradient(145deg,#3a3a3c,#1c1c1e 40%,#2c2c2e);
+  border-radius:54px; padding:8px; width:320px; margin:0 auto;
+  box-shadow:0 24px 56px -20px rgba(23,19,11,.35), 0 4px 14px -4px rgba(23,19,11,.2), inset 0 0 0 1px rgba(255,255,255,.06);
   position:sticky; top:90px;
 }
+.phone-shell::before{
+  content:''; position:absolute; left:-2px; top:120px; width:3px; height:56px;
+  background:linear-gradient(180deg,#4a4a4c,#26262a); border-radius:2px 0 0 2px;
+}
+.phone-shell::after{
+  content:''; position:absolute; left:-2px; top:190px; width:3px; height:32px;
+  background:linear-gradient(180deg,#4a4a4c,#26262a); border-radius:2px 0 0 2px;
+  box-shadow:0 46px 0 0 #26262a, 0 46px 0 -1px #4a4a4c;
+}
 .phone-screen{
-  background:var(--paper); border-radius:32px; overflow:hidden; height:660px;
+  background:var(--paper); border-radius:46px; overflow:hidden; height:660px;
   position:relative; display:flex; flex-direction:column;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.9);
 }
-.phone-notch{
-  position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:26px;
-  background:var(--ink); border-radius:0 0 16px 16px; z-index:10;
+.phone-island{
+  position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  width:96px; height:28px; background:#000; border-radius:20px; z-index:20;
 }
-.app-frame{flex:1; overflow-y:auto; overflow-x:hidden; padding-top:26px;}
+.app-frame{flex:1; overflow-y:auto; overflow-x:hidden; padding-top:44px;}
 .app-frame::-webkit-scrollbar{display:none;}
 .nav-controls{display:flex; justify-content:center; gap:8px; margin-top:14px;}
 .nav-controls button{
@@ -182,6 +194,23 @@ h1.hero em{font-style:normal; color:var(--coral);}
   margin-top:16px; background:var(--ink); color:var(--bg); border-radius:24px; padding:24px;
   box-shadow:var(--shadow-tile);
 }
+
+.feature-panel{
+  margin-top:16px; background:var(--tile); border:1px solid var(--tile-line); border-radius:24px;
+  padding:20px; box-shadow:var(--shadow-tile);
+}
+.feature-panel h4{font-size:14.5px; font-weight:700; color:var(--ink); margin-bottom:6px;}
+.feature-panel p{font-size:12.5px; color:var(--ink-60); line-height:1.4; margin-bottom:12px;}
+.feature-panel textarea{
+  width:100%; border:1px solid var(--tile-line); border-radius:12px; background:var(--paper);
+  padding:11px 13px; font-family:'Inter',sans-serif; font-size:13px; resize:none; outline:none;
+  color:var(--ink);
+}
+.feature-panel textarea::placeholder{color:var(--ink-40);}
+.feature-panel textarea:focus{border-color:var(--coral);}
+.feature-panel-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;}
+.feature-hint{font-size:11.5px; color:var(--ink-40); flex:1;}
+.feature-hint.error{color:#B8452E;}
 .cta-panel h4{font-size:17px; font-weight:700; margin-bottom:8px; font-family:'Space Grotesk',sans-serif;}
 .cta-panel p{font-size:13.5px; color:rgba(244,242,235,.7); line-height:1.5; margin-bottom:18px;}
 .cta-panel a{
@@ -312,7 +341,7 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
     <div class="build-area">
       <div class="phone-shell">
         <div class="phone-screen">
-          <div class="phone-notch"></div>
+          <div class="phone-island"></div>
           <div class="app-frame" id="appFrame"></div>
         </div>
         <div class="nav-controls">
@@ -324,6 +353,19 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
       <div class="screen-panel">
         <h3>Screens</h3>
         <div id="screenList" class="screen-chip-grid"></div>
+
+        <div class="feature-panel">
+          <h4>Add a feature</h4>
+          <p>Describe something to add — it'll build on what you already have, without starting over.</p>
+          <textarea id="featureInput" placeholder="e.g. add a loyalty rewards program" rows="2"></textarea>
+          <div class="feature-panel-row">
+            <span class="feature-hint" id="featureHint"></span>
+            <button class="btn-primary-sm" id="addFeatureBtn" onclick="startAddFeature()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              Add feature
+            </button>
+          </div>
+        </div>
 
         <div class="cta-panel">
           <h4>Like where this is going?</h4>
@@ -426,6 +468,76 @@ function useHintSuggestion(){
   document.getElementById('promptInput').focus();
 }
 
+async function startAddFeature(){
+  const featureInput = document.getElementById('featureInput');
+  const hint = document.getElementById('featureHint');
+  const btn = document.getElementById('addFeatureBtn');
+  const prompt = featureInput.value.trim();
+
+  hint.classList.remove('error');
+  if(!prompt){
+    hint.textContent = 'Describe a feature first.';
+    hint.classList.add('error');
+    return;
+  }
+  if(!appData){
+    hint.textContent = 'Generate a prototype first.';
+    hint.classList.add('error');
+    return;
+  }
+
+  btn.disabled = true;
+  hint.textContent = 'Adding your feature…';
+
+  try{
+    const response = await fetch("/.netlify/functions/generate", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ prompt, existingPrototype: appData })
+    });
+    const data = await response.json();
+
+    if(!response.ok){
+      throw new Error(data?.error || ('Request failed with status ' + response.status));
+    }
+
+    if(data.isValidAppIdea === false){
+      hint.textContent = data.reason || "That didn't come through as a clear feature request.";
+      hint.classList.add('error');
+      return;
+    }
+
+    // Success: merge in the updated prototype and re-render, keeping the
+    // person on the same screen they were viewing if it still exists.
+    const previousScreenId = currentScreenId;
+    appData = data;
+    featureInput.value = '';
+    hint.textContent = 'Feature added — new screens are in the list below.';
+
+    const listEl = document.getElementById('screenList');
+    listEl.innerHTML = '';
+    appData.screens.forEach((s, i)=>{
+      const item = document.createElement('div');
+      item.className = 'screen-item';
+      item.id = 'sitem_' + s.id;
+      item.onclick = () => navTo(s.id, true);
+      item.innerHTML = `<div class="num">${i+1}</div><div class="label">${s.title}</div>`;
+      listEl.appendChild(item);
+    });
+
+    const stillExists = appData.screens.some(s => s.id === previousScreenId);
+    navStack = [];
+    navTo(stillExists ? previousScreenId : appData.startScreen, true, true);
+
+  }catch(err){
+    console.error(err);
+    hint.textContent = err.message || "Couldn't add that feature. Please try again.";
+    hint.classList.add('error');
+  }finally{
+    btn.disabled = false;
+  }
+}
+
 function renderResult(prompt){
   document.getElementById('loadingStage').classList.remove('active');
   document.getElementById('resultStage').classList.add('active');
@@ -452,6 +564,11 @@ function renderResult(prompt){
   document.getElementById('resultStage').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+function photoUrl(query, w, h){
+  const seed = encodeURIComponent((query || 'app').toLowerCase().replace(/\s+/g,'-'));
+  return `https://picsum.photos/seed/${seed}/${w}/${h}`;
+}
+
 function componentHTML(c, accent){
   switch(c.kind){
     case 'header':
@@ -461,8 +578,8 @@ function componentHTML(c, accent){
       if(c.style==='caption') return `<div style="font-size:12px;color:#8a8578;padding:0 20px 8px;">${c.text}</div>`;
       return `<div style="font-size:14px;line-height:1.5;padding:0 20px 12px;color:#3a352a;">${c.text}</div>`;
     case 'card':
-      return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 16px 12px;padding:16px;border-radius:16px;background:#F7F5EF;border:1px solid rgba(23,19,11,.08);display:flex;gap:12px;align-items:center;cursor:${c.navTo?'pointer':'default'};">
-        <div style="font-size:28px;width:48px;height:48px;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${c.image_emoji||'📱'}</div>
+      return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 16px 12px;padding:12px;border-radius:16px;background:#F7F5EF;border:1px solid rgba(23,19,11,.08);display:flex;gap:12px;align-items:center;cursor:${c.navTo?'pointer':'default'};">
+        <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#fff;"><img src="${photoUrl(c.image_query, 112, 112)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.title||''}" loading="lazy"></div>
         <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14.5px;">${c.title}</div><div style="font-size:12.5px;color:#8a8578;margin-top:2px;">${c.subtitle||''}</div></div>
         ${c.navTo?`<div style="color:${accent};font-size:16px;">›</div>`:''}
       </div>`;
@@ -479,11 +596,20 @@ function componentHTML(c, accent){
       </div>`;
     case 'stat':
       return `<div style="display:inline-block;padding:14px 18px;margin:0 8px 12px 20px;background:#F7F5EF;border-radius:14px;text-align:center;"><div style="font-weight:800;font-size:20px;font-family:'Space Grotesk',sans-serif;">${c.value}</div><div style="font-size:11px;color:#8a8578;margin-top:2px;">${c.label}</div></div>`;
-    case 'image_banner':
-      return `<div style="margin:0 16px 14px;height:140px;border-radius:16px;background:linear-gradient(135deg,${accent}22,${accent}44);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;">
-        <div style="font-size:40px;">${c.image_emoji||'✨'}</div>
-        <div style="font-size:12px;color:#5a5548;font-weight:600;">${c.caption||''}</div>
+    case 'image_banner':{
+      const height = c.full_bleed ? 220 : 140;
+      const margin = c.full_bleed ? '0 0 14px' : '0 16px 14px';
+      const radius = c.full_bleed ? '0' : '16px';
+      return `<div style="margin:${margin};height:${height}px;border-radius:${radius};overflow:hidden;position:relative;">
+        <img src="${photoUrl(c.image_query, 500, height*2)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.caption||''}" loading="lazy">
+        ${c.caption ? `<div style="position:absolute;bottom:0;left:0;right:0;padding:20px 16px 12px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));"><div style="color:#fff;font-size:14px;font-weight:700;">${c.caption}</div></div>` : ''}
       </div>`;
+    }
+    case 'avatar':{
+      const sizeMap = {small:32, medium:48, large:80};
+      const size = sizeMap[c.size] || sizeMap.medium;
+      return `<div style="padding:8px 20px;"><div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 1px 4px rgba(23,19,11,.12);"><img src="${photoUrl(c.image_query || 'portrait', size*2, size*2)}" style="width:100%;height:100%;object-fit:cover;" alt="avatar" loading="lazy"></div></div>`;
+    }
     case 'map_placeholder':
       return `<div style="margin:0 16px 14px;height:180px;border-radius:16px;background:repeating-linear-gradient(45deg,#e8e5dc,#e8e5dc 10px,#f0eee6 10px,#f0eee6 20px);display:flex;align-items:center;justify-content:center;position:relative;">
         <div style="width:14px;height:14px;background:${accent};border-radius:50%;box-shadow:0 0 0 6px ${accent}33;"></div>
@@ -592,10 +718,12 @@ function buildStandaloneHTML(data){
 body{font-family:'Inter',sans-serif;background:#F4F2EB;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 20px;color:#17130B;}
 .badge{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${accent};margin-bottom:8px;}
 h1{font-family:'Space Grotesk',sans-serif;font-size:26px;margin-bottom:28px;text-align:center;}
-.phone-shell{background:#17130B;border-radius:44px;padding:14px;width:320px;box-shadow:0 30px 60px -20px rgba(23,19,11,.35);}
-.phone-screen{background:#fff;border-radius:32px;overflow:hidden;height:660px;position:relative;display:flex;flex-direction:column;}
-.phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#17130B;border-radius:0 0 16px 16px;z-index:10;}
-.app-frame{flex:1;overflow-y:auto;padding-top:26px;}
+.phone-shell{position:relative;background:linear-gradient(145deg,#3a3a3c,#1c1c1e 40%,#2c2c2e);border-radius:54px;padding:8px;width:320px;box-shadow:0 24px 56px -20px rgba(23,19,11,.35),0 4px 14px -4px rgba(23,19,11,.2),inset 0 0 0 1px rgba(255,255,255,.06);}
+.phone-shell::before{content:'';position:absolute;left:-2px;top:120px;width:3px;height:56px;background:linear-gradient(180deg,#4a4a4c,#26262a);border-radius:2px 0 0 2px;}
+.phone-shell::after{content:'';position:absolute;left:-2px;top:190px;width:3px;height:32px;background:linear-gradient(180deg,#4a4a4c,#26262a);border-radius:2px 0 0 2px;box-shadow:0 46px 0 0 #26262a,0 46px 0 -1px #4a4a4c;}
+.phone-screen{background:#fff;border-radius:46px;overflow:hidden;height:660px;position:relative;display:flex;flex-direction:column;box-shadow:inset 0 0 0 2px rgba(0,0,0,.9);}
+.phone-island{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:96px;height:28px;background:#000;border-radius:20px;z-index:20;}
+.app-frame{flex:1;overflow-y:auto;padding-top:44px;}
 .nav-controls{display:flex;justify-content:center;gap:8px;margin-top:14px;}
 .nav-controls button{border:1px solid rgba(23,19,11,.15);background:#fff;border-radius:100px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;color:rgba(23,19,11,.6);font-family:'Inter',sans-serif;}
 .nav-controls button:hover{color:#17130B;border-color:#17130B;}
@@ -606,13 +734,14 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:26px;margin-bottom:28px;text
 <div class="badge">Interactive Prototype</div>
 <h1>${data.appName || 'App Prototype'}</h1>
 <div class="phone-shell">
-  <div class="phone-screen"><div class="phone-notch"></div><div class="app-frame" id="appFrame"></div></div>
+  <div class="phone-screen"><div class="phone-island"></div><div class="app-frame" id="appFrame"></div></div>
   <div class="nav-controls"><button id="navBack" onclick="navBack()">← Back</button><button onclick="navHome()">Home</button></div>
 </div>
 <div class="footer-note">Simulated prototype generated by VirtualEmployee.com's Prototype Studio, for concept exploration only.</div>
 <script>
 const appData = ${dataJSON};
 let navStack = []; let currentScreenId = null;
+${photoUrl.toString()}
 ${componentHTML.toString()}
 ${renderScreen.toString()}
 ${navTo.toString()}
