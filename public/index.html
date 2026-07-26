@@ -663,8 +663,14 @@ function renderResult(prompt){
   document.getElementById('resultStage').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function photoUrl(query, w, h){
-  const seed = encodeURIComponent((query || 'app').toLowerCase().replace(/\s+/g,'-'));
+function photoUrl(component, w, h){
+  // Prefer the real, content-matched photo resolved server-side via Pexels.
+  if(component && component.resolved_image_url) return component.resolved_image_url;
+  // Fallback: no server-side resolution happened (e.g. Pexels key not
+  // configured yet) — use a seeded placeholder so the layout still works,
+  // though it won't match the described content.
+  const query = (component && component.image_query) || 'app';
+  const seed = encodeURIComponent(query.toLowerCase().replace(/\s+/g,'-'));
   return `https://picsum.photos/seed/${seed}/${w}/${h}`;
 }
 
@@ -678,7 +684,7 @@ function componentHTML(c, accent){
       return `<div style="font-size:14px;line-height:1.5;padding:0 20px 12px;color:#3a352a;">${c.text}</div>`;
     case 'card':
       return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 16px 12px;padding:12px;border-radius:16px;background:#F7F5EF;border:1px solid rgba(23,19,11,.08);display:flex;gap:12px;align-items:center;cursor:${c.navTo?'pointer':'default'};">
-        <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#fff;"><img src="${photoUrl(c.image_query, 112, 112)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.title||''}" loading="lazy"></div>
+        <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#fff;"><img src="${photoUrl(c, 112, 112)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.title||''}" loading="lazy"></div>
         <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14.5px;">${c.title}</div><div style="font-size:12.5px;color:#8a8578;margin-top:2px;">${c.subtitle||''}</div></div>
         ${c.navTo?`<div style="color:${accent};font-size:16px;">›</div>`:''}
       </div>`;
@@ -700,14 +706,14 @@ function componentHTML(c, accent){
       const margin = c.full_bleed ? '0 0 14px' : '0 16px 14px';
       const radius = c.full_bleed ? '0' : '16px';
       return `<div style="margin:${margin};height:${height}px;border-radius:${radius};overflow:hidden;position:relative;">
-        <img src="${photoUrl(c.image_query, 500, height*2)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.caption||''}" loading="lazy">
+        <img src="${photoUrl(c, 500, height*2)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.caption||''}" loading="lazy">
         ${c.caption ? `<div style="position:absolute;bottom:0;left:0;right:0;padding:20px 16px 12px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));"><div style="color:#fff;font-size:14px;font-weight:700;">${c.caption}</div></div>` : ''}
       </div>`;
     }
     case 'avatar':{
       const sizeMap = {small:32, medium:48, large:80};
       const size = sizeMap[c.size] || sizeMap.medium;
-      return `<div style="padding:8px 20px;"><div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 1px 4px rgba(23,19,11,.12);"><img src="${photoUrl(c.image_query || 'portrait', size*2, size*2)}" style="width:100%;height:100%;object-fit:cover;" alt="avatar" loading="lazy"></div></div>`;
+      return `<div style="padding:8px 20px;"><div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 1px 4px rgba(23,19,11,.12);"><img src="${photoUrl(c, size*2, size*2)}" style="width:100%;height:100%;object-fit:cover;" alt="avatar" loading="lazy"></div></div>`;
     }
     case 'map_placeholder':
       return `<div style="margin:0 16px 14px;height:180px;border-radius:16px;background:repeating-linear-gradient(45deg,#e8e5dc,#e8e5dc 10px,#f0eee6 10px,#f0eee6 20px);display:flex;align-items:center;justify-content:center;position:relative;">
