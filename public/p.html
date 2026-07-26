@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shared App Prototype — VirtualEmployee.com</title>
+<style>
+:root{
+  --bg:#F4F2EB; --ink:#17130B; --coral:#FF5A36; --butter:#FFD649;
+  --mint:#B9EFD9; --teal:#0EA5A4;
+  --ink-60:rgba(23,19,11,.6); --ink-40:rgba(23,19,11,.4); --ink-15:rgba(23,19,11,.12);
+  --paper:#FFFFFF;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background-color:var(--bg); color:var(--ink);
+  background-image:
+    linear-gradient(rgba(23,19,11,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23,19,11,.02) 1px, transparent 1px);
+  background-size:2px 2px;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  display:flex; flex-direction:column; align-items:center;
+}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap');
+h1,h2,h3{font-family:'Space Grotesk',sans-serif;}
+
+header.top{width:100%; border-bottom:1px solid var(--ink-15); background:var(--bg);}
+.top-inner{display:flex; align-items:center; justify-content:space-between; padding:18px 32px; max-width:1240px; margin:0 auto;}
+.brand{font-weight:700; font-size:19px; letter-spacing:-.02em; display:flex; align-items:center; gap:10px;}
+.brand .dot{width:10px; height:10px; border-radius:50%; background:var(--coral);}
+.brand small{font-weight:500; font-size:12px; color:var(--ink-60); font-family:'Inter',sans-serif; margin-left:6px;}
+.top-cta{font-size:13px; font-weight:600; padding:10px 18px; border-radius:100px; background:var(--ink); color:var(--bg); text-decoration:none; border:none; cursor:pointer;}
+
+main{width:100%; max-width:900px; padding:56px 20px 80px; display:flex; flex-direction:column; align-items:center;}
+.share-meta{text-align:center; margin-bottom:36px;}
+.share-meta .eyebrow{
+  font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--coral); margin-bottom:10px;
+}
+.share-meta h1{font-size:28px; font-weight:800; letter-spacing:-.02em; margin-bottom:8px;}
+.share-meta p{font-size:14.5px; color:var(--ink-60); max-width:480px; margin:0 auto;}
+
+/* Phone frame — iPhone 15/16 Pro style, matches the main tool */
+.phone-shell{
+  position:relative; background:linear-gradient(145deg,#3a3a3c,#1c1c1e 40%,#2c2c2e);
+  border-radius:54px; padding:8px; width:320px; margin:0 auto;
+  box-shadow:0 24px 56px -20px rgba(23,19,11,.35), 0 4px 14px -4px rgba(23,19,11,.2), inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.phone-shell::before{
+  content:''; position:absolute; left:-2px; top:120px; width:3px; height:56px;
+  background:linear-gradient(180deg,#4a4a4c,#26262a); border-radius:2px 0 0 2px;
+}
+.phone-shell::after{
+  content:''; position:absolute; left:-2px; top:190px; width:3px; height:32px;
+  background:linear-gradient(180deg,#4a4a4c,#26262a); border-radius:2px 0 0 2px;
+  box-shadow:0 46px 0 0 #26262a, 0 46px 0 -1px #4a4a4c;
+}
+.phone-screen{
+  background:var(--paper); border-radius:46px; overflow:hidden; height:660px;
+  position:relative; display:flex; flex-direction:column;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.9);
+}
+.phone-island{
+  position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  width:96px; height:28px; background:#000; border-radius:20px; z-index:20;
+}
+.app-frame{flex:1; overflow-y:auto; overflow-x:hidden; padding-top:44px;}
+.app-frame::-webkit-scrollbar{display:none;}
+.nav-controls{display:flex; justify-content:center; gap:8px; margin-top:14px;}
+.nav-controls button{
+  border:1px solid var(--ink-15); background:var(--paper); border-radius:100px; padding:8px 14px;
+  font-size:12px; font-weight:600; cursor:pointer; color:var(--ink-60); font-family:'Inter',sans-serif;
+}
+.nav-controls button:hover{color:var(--ink); border-color:var(--ink);}
+.nav-controls button:disabled{opacity:.35; cursor:default;}
+
+.share-cta{
+  margin-top:40px; background:var(--ink); color:var(--bg); border-radius:24px; padding:26px 32px;
+  text-align:center; max-width:420px;
+}
+.share-cta h3{font-size:18px; font-weight:800; margin-bottom:8px;}
+.share-cta p{font-size:13.5px; color:rgba(244,242,235,.7); line-height:1.5; margin-bottom:18px;}
+.share-cta a{
+  display:inline-flex; align-items:center; gap:7px; background:var(--coral); color:#fff;
+  padding:12px 22px; border-radius:100px; text-decoration:none; font-size:13.5px; font-weight:700;
+}
+
+.state-box{
+  max-width:480px; text-align:center; padding:60px 20px;
+}
+.state-box .icon{font-size:40px; margin-bottom:16px;}
+.state-box h2{font-size:20px; font-weight:800; margin-bottom:8px;}
+.state-box p{font-size:14px; color:var(--ink-60); line-height:1.5; margin-bottom:20px;}
+.state-box a{
+  display:inline-block; background:var(--ink); color:var(--bg); padding:12px 24px;
+  border-radius:100px; text-decoration:none; font-size:13.5px; font-weight:700;
+}
+.loading-dot{
+  width:8px; height:8px; border-radius:50%; background:var(--coral); display:inline-block;
+  animation:pulseDot 1s infinite ease-in-out;
+}
+@keyframes pulseDot{0%,100%{opacity:.3;}50%{opacity:1;}}
+
+@media(max-width:640px){
+  .top-inner{padding-left:20px; padding-right:20px;}
+  .phone-shell{width:100%; max-width:320px;}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand"><span class="dot"></span>VirtualEmployee<small>Prototype Studio</small></div>
+    <a class="top-cta" href="/">Build your own →</a>
+  </div>
+</header>
+
+<main id="mainContent">
+  <div class="state-box" id="loadingState">
+    <div class="loading-dot"></div>
+    <p style="margin-top:14px;">Loading shared prototype…</p>
+  </div>
+</main>
+
+<script>
+// ============================================================
+// Rendering logic — kept intentionally identical to the main tool
+// (public/index.html) so a shared prototype always looks the same
+// whether viewed via link or in the original generation session.
+// ============================================================
+
+function photoUrl(component, w, h){
+  if(component && component.resolved_image_url) return component.resolved_image_url;
+  const query = (component && component.image_query) || 'app';
+  const seed = encodeURIComponent(query.toLowerCase().replace(/\s+/g,'-'));
+  return `https://picsum.photos/seed/${seed}/${w}/${h}`;
+}
+
+const CARD_SHADOW = '0 1px 2px rgba(23,19,11,.04), 0 4px 12px -6px rgba(23,19,11,.10)';
+const GUTTER = 18;
+const RADIUS_LG = 16;
+const RADIUS_MD = 12;
+
+function componentHTML(c, accent){
+  switch(c.kind){
+    case 'header':
+      return `<div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;padding:4px 20px 14px;">${c.text}</div>`;
+    case 'text':
+      if(c.style==='heading') return `<div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;padding:0 20px 10px;line-height:1.2;">${c.text}</div>`;
+      if(c.style==='caption') return `<div style="font-size:12px;color:#8a8578;padding:0 20px 8px;">${c.text}</div>`;
+      return `<div style="font-size:14px;line-height:1.5;padding:0 20px 12px;color:#3a352a;">${c.text}</div>`;
+    case 'card':
+      return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 ${GUTTER}px 12px;padding:12px;border-radius:${RADIUS_LG}px;background:#fff;box-shadow:${CARD_SHADOW};display:flex;gap:12px;align-items:center;cursor:${c.navTo?'pointer':'default'};">
+        <div style="width:56px;height:56px;border-radius:${RADIUS_MD}px;overflow:hidden;flex-shrink:0;background:#F0EEE6;"><img src="${photoUrl(c, 112, 112)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.title||''}" loading="lazy"></div>
+        <div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:14.5px;letter-spacing:-.01em;">${c.title}</div><div style="font-size:12.5px;color:#8a8578;margin-top:3px;font-weight:500;">${c.subtitle||''}</div></div>
+        ${c.navTo?`<div style="color:${accent};font-size:17px;font-weight:600;flex-shrink:0;">›</div>`:''}
+      </div>`;
+    case 'button':{
+      const primary = c.style !== 'secondary';
+      return `<div style="padding:6px ${GUTTER+2}px 12px;"><button class="gbtn" data-nav="${c.navTo||''}" style="width:100%;padding:14px;border-radius:100px;border:${primary?'none':'1.5px solid rgba(23,19,11,.15)'};background:${primary?accent:'transparent'};color:${primary?'#fff':'#17130B'};font-weight:700;font-size:14px;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:-.01em;box-shadow:${primary?'0 2px 8px -2px '+accent+'66':'none'};">${c.label}</button></div>`;
+    }
+    case 'input':
+      return `<div style="padding:0 ${GUTTER+2}px 12px;"><div style="padding:13px 16px;border-radius:${RADIUS_MD}px;background:#F7F5EF;border:1px solid rgba(23,19,11,.1);color:#8a8578;font-size:13.5px;">${c.placeholder}</div></div>`;
+    case 'quantity_stepper':{
+      const qty = c.quantity || 1;
+      const stepperId = 'qty_' + Math.random().toString(36).slice(2,8);
+      return `<div style="margin:0 ${GUTTER}px 10px;padding:12px 14px;border-radius:${RADIUS_MD}px;background:#fff;box-shadow:${CARD_SHADOW};display:flex;align-items:center;gap:12px;">
+        ${c.title?`<div style="flex:1; min-width:0;"><div style="font-weight:700;font-size:13.5px;">${c.title}</div>${c.subtitle?`<div style="font-size:11.5px;color:#8a8578;margin-top:2px;">${c.subtitle}</div>`:''}</div>`:'<div style="flex:1;"></div>'}
+        <div style="display:flex; align-items:center; gap:0; background:#F7F5EF; border-radius:100px; padding:2px;">
+          <button type="button" style="width:28px;height:28px;border-radius:50%;border:none;background:#fff;box-shadow:0 1px 2px rgba(23,19,11,.12);font-size:15px;font-weight:700;cursor:pointer;color:${accent};" onclick="const el=document.getElementById('${stepperId}'); let v=parseInt(el.textContent); if(v>1){el.textContent=v-1;}">−</button>
+          <span id="${stepperId}" style="width:32px;text-align:center;font-weight:700;font-size:13.5px;">${qty}</span>
+          <button type="button" style="width:28px;height:28px;border-radius:50%;border:none;background:${accent};box-shadow:0 1px 2px rgba(23,19,11,.12);font-size:15px;font-weight:700;cursor:pointer;color:#fff;" onclick="const el=document.getElementById('${stepperId}'); el.textContent=parseInt(el.textContent)+1;">+</button>
+        </div>
+      </div>`;
+    }
+    case 'list_row':
+      return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 ${GUTTER}px;padding:14px 4px;border-bottom:1px solid rgba(23,19,11,.07);display:flex;justify-content:space-between;align-items:center;cursor:${c.navTo?'pointer':'default'};">
+        <div><div style="font-weight:700;font-size:14px;letter-spacing:-.01em;">${c.title}</div><div style="font-size:12px;color:#8a8578;margin-top:3px;font-weight:500;">${c.subtitle||''}</div></div>
+        <div style="font-size:12.5px;color:${accent};font-weight:700;flex-shrink:0;margin-left:12px;">${c.trailing||(c.navTo?'›':'')}</div>
+      </div>`;
+    case 'stat':{
+      const ratingMatch = String(c.value).match(/^(\d(?:\.\d)?)\s*(★|stars?)$/i);
+      let valueHTML = c.value;
+      if(ratingMatch){
+        const rating = parseFloat(ratingMatch[1]);
+        const full = Math.round(rating);
+        valueHTML = `<span style="letter-spacing:1px;">${'★'.repeat(Math.min(full,5))}${'☆'.repeat(Math.max(5-full,0))}</span> <span style="font-size:13px;font-weight:700;color:#8a8578;">${rating}</span>`;
+      }
+      return `<div style="display:inline-block;padding:14px 18px;margin:0 8px 12px ${GUTTER}px;background:#fff;box-shadow:${CARD_SHADOW};border-radius:${RADIUS_MD}px;text-align:center;"><div style="font-weight:800;font-size:${ratingMatch?15:20}px;font-family:'Space Grotesk',sans-serif;color:${ratingMatch?'#D4A017':'inherit'};">${valueHTML}</div><div style="font-size:11px;color:#8a8578;margin-top:3px;font-weight:600;">${c.label}</div></div>`;
+    }
+    case 'image_banner':{
+      const height = c.full_bleed ? 220 : 140;
+      const margin = c.full_bleed ? '0 0 14px' : '0 16px 14px';
+      const radius = c.full_bleed ? '0' : '16px';
+      return `<div style="margin:${margin};height:${height}px;border-radius:${radius};overflow:hidden;position:relative;">
+        <img src="${photoUrl(c, 500, height*2)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.caption||''}" loading="lazy">
+        ${c.caption ? `<div style="position:absolute;bottom:0;left:0;right:0;padding:20px 16px 12px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.55));"><div style="color:#fff;font-size:14px;font-weight:700;">${c.caption}</div></div>` : ''}
+      </div>`;
+    }
+    case 'avatar':{
+      const sizeMap = {small:32, medium:48, large:80};
+      const size = sizeMap[c.size] || sizeMap.medium;
+      return `<div style="padding:8px 20px;"><div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;border:2px solid #fff;box-shadow:0 1px 4px rgba(23,19,11,.12);"><img src="${photoUrl(c, size*2, size*2)}" style="width:100%;height:100%;object-fit:cover;" alt="avatar" loading="lazy"></div></div>`;
+    }
+    case 'map_placeholder':
+      return `<div style="margin:0 16px 14px;height:180px;border-radius:16px;background:repeating-linear-gradient(45deg,#e8e5dc,#e8e5dc 10px,#f0eee6 10px,#f0eee6 20px);display:flex;align-items:center;justify-content:center;position:relative;">
+        <div style="width:14px;height:14px;background:${accent};border-radius:50%;box-shadow:0 0 0 6px ${accent}33;"></div>
+        <div style="position:absolute;bottom:10px;font-size:11px;color:#8a8578;background:#fff;padding:4px 10px;border-radius:100px;">${c.caption||'Live location'}</div>
+      </div>`;
+    case 'divider':
+      return `<div style="height:1px;background:rgba(23,19,11,.08);margin:8px 20px;"></div>`;
+    case 'spacer':
+      return `<div style="height:14px;"></div>`;
+    case 'tabbar':{
+      const items = c.items || [];
+      const ICON_MAP = {
+        home:'⌂', explore:'◎', search:'⚲', discover:'◎', browse:'▤',
+        cart:'⛃', bag:'⛃', shop:'⛃', orders:'▤', order:'▤', bookings:'▤', booking:'▤', trips:'▤',
+        chat:'✉', messages:'✉', message:'✉', inbox:'✉', activity:'◔',
+        profile:'◉', account:'◉', you:'◉', me:'◉',
+        favorites:'♡', wishlist:'♡', saved:'♡', likes:'♡',
+        dashboard:'▦', analytics:'▦', stats:'▦',
+        cards:'▭', wallet:'▭', payments:'▭', payment:'▭', billing:'▭',
+        groups:'◈', community:'◈', social:'◈',
+        post:'+', add:'+', record:'●',
+        map:'⚑', tracking:'⚑', track:'⚑', nearby:'⚑',
+      };
+      function iconFor(label, idx){
+        const key = (label||'').toLowerCase().trim();
+        if(ICON_MAP[key]) return ICON_MAP[key];
+        const words = key.split(/[\s_-]+/);
+        for(const w of words) if(ICON_MAP[w]) return ICON_MAP[w];
+        return ['⌂','◎','▤','◉','☰'][idx % 5];
+      }
+      return `<div style="position:sticky;bottom:0;background:#fff;border-top:1px solid rgba(23,19,11,.08);display:flex;padding:8px 0 8px;margin-top:auto;box-shadow:0 -2px 12px -6px rgba(23,19,11,.06);">
+        ${items.map((it,idx)=>{
+          const navId = (c.navMap && c.navMap[it]) || '';
+          const isActive = navId && navId === (window.__gcurrentScreenId || '');
+          return `<div class="gcard gtab" data-nav="${navId}" style="flex:1;text-align:center;cursor:${navId?'pointer':'default'};position:relative;padding-top:2px;">
+            ${isActive?`<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:22px;height:3px;border-radius:0 0 3px 3px;background:${accent};"></div>`:''}
+            <div style="font-size:18px;color:${isActive?accent:'#8a8578'};">${iconFor(it, idx)}</div>
+            <div style="font-size:10px;margin-top:3px;color:${isActive?accent:'#8a8578'};font-weight:${isActive?'800':'600'};">${it}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+    default: return '';
+  }
+}
+
+let appData = null;
+let navStack = [];
+let currentScreenId = null;
+
+function renderScreen(screenId){
+  const screen = appData.screens.find(s=>s.id===screenId);
+  if(!screen) return;
+  currentScreenId = screenId;
+  window.__gcurrentScreenId = screenId;
+  const accent = appData.primaryColor || '#FF5A36';
+  const frame = document.getElementById('appFrame');
+  frame.style.display = 'flex'; frame.style.flexDirection = 'column';
+  frame.innerHTML = `<div style="display:flex;flex-direction:column;min-height:100%;">${screen.components.map(c=>componentHTML(c, accent)).join('')}</div>`;
+
+  frame.querySelectorAll('[data-nav]').forEach(el=>{
+    const navId = el.getAttribute('data-nav');
+    if(navId) el.addEventListener('click', ()=> navTo(navId, false));
+  });
+
+  const backBtn = document.getElementById('navBack');
+  if(backBtn) backBtn.disabled = navStack.length <= 1;
+}
+
+function navTo(screenId, fromPanel, isInitial){
+  if(!isInitial && currentScreenId) navStack.push(currentScreenId);
+  renderScreen(screenId);
+}
+function navBack(){ if(navStack.length === 0) return; renderScreen(navStack.pop()); }
+function navHome(){ navStack = []; renderScreen(appData.startScreen); }
+
+// ============================================================
+// Page bootstrap — reads ?id= from the URL and fetches the prototype
+// ============================================================
+async function loadSharedPrototype(){
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const main = document.getElementById('mainContent');
+
+  if(!id){
+    main.innerHTML = `<div class="state-box">
+      <div class="icon">🔗</div>
+      <h2>No prototype link provided</h2>
+      <p>This page needs a valid share link to show a prototype.</p>
+      <a href="/">Build a new prototype</a>
+    </div>`;
+    return;
+  }
+
+  try{
+    const res = await fetch('/.netlify/functions/get-prototype?id=' + encodeURIComponent(id));
+    const data = await res.json();
+
+    if(!res.ok){
+      main.innerHTML = `<div class="state-box">
+        <div class="icon">😕</div>
+        <h2>Couldn't load this prototype</h2>
+        <p>${data.error || 'This link may be broken or expired.'}</p>
+        <a href="/">Build your own prototype</a>
+      </div>`;
+      return;
+    }
+
+    appData = data;
+
+    main.innerHTML = `
+      <div class="share-meta">
+        <div class="eyebrow">Shared prototype</div>
+        <h1>${appData.appName || 'App Prototype'}</h1>
+        <p>Tap through the screens below to explore this concept.</p>
+      </div>
+      <div class="phone-shell">
+        <div class="phone-screen">
+          <div class="phone-island"></div>
+          <div class="app-frame" id="appFrame"></div>
+        </div>
+        <div class="nav-controls">
+          <button id="navBack" onclick="navBack()">← Back</button>
+          <button onclick="navHome()">Home</button>
+        </div>
+      </div>
+      <div class="share-cta">
+        <h3>Like where this is going?</h3>
+        <p>This is a simulated prototype — the real thing includes working backends, integrations, and production-grade engineering. Let's scope it together.</p>
+        <a href="/">Build your own →</a>
+      </div>
+    `;
+
+    navTo(appData.startScreen, true, true);
+
+  }catch(err){
+    main.innerHTML = `<div class="state-box">
+      <div class="icon">😕</div>
+      <h2>Something went wrong</h2>
+      <p>We couldn't load this prototype right now. Please try again.</p>
+      <a href="/">Build your own prototype</a>
+    </div>`;
+  }
+}
+
+loadSharedPrototype();
+</script>
+</body>
+</html>
