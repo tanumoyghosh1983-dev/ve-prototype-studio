@@ -5,5 +5,8 @@
   "description": "VirtualEmployee.com Prototype Studio — prompt-to-prototype tool, powered by Google Gemini",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
   }
 }
