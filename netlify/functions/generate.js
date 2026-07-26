@@ -26,7 +26,8 @@ SHAPE A — if the input IS a describable app idea:
         {"kind": "button", "label": "...", "navTo": "screen_id", "style": "primary|secondary"},
         {"kind": "input", "placeholder": "..."},
         {"kind": "list_row", "title": "...", "subtitle": "...", "trailing": "...", "navTo": "screen_id or null"},
-        {"kind": "stat", "value": "...", "label": "..."},
+        {"kind": "stat", "value": "...", "label": "...", "_comment": "for star ratings, format value as '4.8 stars' exactly (not just '4.8') so it renders as a real star widget"},
+        {"kind": "quantity_stepper", "title": "...", "subtitle": "...", "quantity": 1, "_comment": "use for cart/order line items where the user could adjust how many of something they want"},
         {"kind": "tabbar", "items": ["Home","Search","Cart","Profile"], "navMap": {"Home":"screen_id","Search":"screen_id"}},
         {"kind": "image_banner", "image_query": "2-4 word real-world photo subject matching this screen's content", "caption": "...", "full_bleed": true},
         {"kind": "avatar", "image_query": "portrait of a person, e.g. 'smiling woman portrait' or 'professional headshot man'", "size": "small|medium|large"},
@@ -75,6 +76,8 @@ RULES FOR SHAPE A (valid app ideas):
 - Keep each screen to 6-14 components so it fits a phone screen reasonably.
 - The first screen in the array should match startScreen.
 - Use "card" and "image_banner" components generously wherever a real app would show a photo (food items, properties, profile pictures, product photos, workout scenes, travel destinations, etc.) — this is a photo-realistic mockup, not an icon-based wireframe. Every image_query must be a concrete, photographable real-world subject (2-4 words), never an abstract concept, emoji description, or icon name.
+- On any cart, order, or checkout screen with individual line items (food orders, shopping carts, multi-item bookings), use "quantity_stepper" for each item instead of a plain list_row — it renders real +/- controls, which reads as a genuinely interactive cart rather than a static list.
+- When a screen shows a rating (restaurant rating, driver rating, product rating, provider rating), use a "stat" component with the value formatted exactly as "4.8 stars" — this triggers a real star-icon rendering instead of plain text.
 - Use "avatar" for any person's profile picture (user avatars, driver photos, reviewer photos, doctor photos, etc.) instead of a generic icon.
 - Home/feed/list screens should typically have 3-5 image-bearing cards; detail screens should typically open with a large image_banner.
 
@@ -102,7 +105,7 @@ Respond with ONLY valid JSON, no markdown fences, no preamble, in this exact sha
   "startScreen": "same as before"
 }
 
-Use the same component schema as before: header, text, card (with image_query), button, input, list_row, stat, tabbar, image_banner (with image_query, full_bleed), avatar (with image_query, size), map_placeholder, divider, spacer. Every image_query must be a concrete, photographable real-world subject (2-4 words).
+Use the same component schema as before: header, text, card (with image_query), button, input, quantity_stepper (title, subtitle, quantity), list_row, stat, tabbar, image_banner (with image_query, full_bleed), avatar (with image_query, size), map_placeholder, divider, spacer. Every image_query must be a concrete, photographable real-world subject (2-4 words). For star ratings, format the stat value as "4.8 stars" exactly, not just "4.8".
 
 If the requested feature is too vague or nonsensical to add (e.g. "make it better" or "idk something cool"), respond instead with:
 {"isValidAppIdea": false, "reason": "...", "suggestion": "a concrete feature example, phrased as a ready-to-use request"}
