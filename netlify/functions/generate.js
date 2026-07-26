@@ -123,6 +123,57 @@ function editPreservesOriginalScreens(originalScreens, newScreens) {
   return { valid: missing.length === 0, missingIds: missing };
 }
 
+// Resolves every image_query in the prototype to a real, content-matching
+// photo URL via the Pexels API. Deduplicates identical queries so a prompt
+// with (say) "margherita pizza" used on 3 cards only costs 1 Pexels call,
+// not 3. If Pexels fails entirely (missing key, rate limit, network issue),
+// falls back to a neutral placeholder rather than failing the whole request
+// — a slightly generic image beats no prototype at all.
+async function resolveImages(screens, pexelsApiKey) {
+  if (!pexelsApiKey) return; // no key configured — leave image_query as-is, frontend will show a placeholder
+
+  const queries = new Set();
+  for (const s of screens) {
+    for (const c of s.components || []) {
+      if (c.image_query && !c.resolved_image_url) queries.add(c.image_query);
+    }
+  }
+  if (queries.size === 0) return;
+
+  const resolved = new Map();
+  await Promise.all(
+    [...queries].map(async (q) => {
+      try {
+        const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(
+          q
+        )}&per_page=1&orientation=square`;
+        const res = await fetch(url, {
+          headers: { Authorization: pexelsApiKey },
+        });
+        if (!res.ok) return; // leave unresolved on failure, handled below
+        const data = await res.json();
+        const photo = data?.photos?.[0];
+        if (photo?.src?.large) {
+          resolved.set(q, photo.src.large);
+        }
+      } catch (e) {
+        // network error on this one query — leave unresolved, fallback applies
+      }
+    })
+  );
+
+  const FALLBACK_IMG =
+    "https://images.pexels.com/photos/1591056/pexels-photo-1591056.jpeg?auto=compress&cs=tinysrgb&w=600";
+
+  for (const s of screens) {
+    for (const c of s.components || []) {
+      if (c.image_query && !c.resolved_image_url) {
+        c.resolved_image_url = resolved.get(c.image_query) || FALLBACK_IMG;
+      }
+    }
+  }
+}
+
 // Attempts to repair JSON that was cut off mid-structure (a common symptom of
 // hitting the model's output token limit). Truncation almost always happens
 // at a clean nesting boundary, so counting open vs. closed brackets/braces
@@ -271,6 +322,7 @@ exports.handler = async function (event) {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
+  const pexelsApiKey = process.env.PEXELS_API_KEY; // optional — falls back to placeholder images if not set
   if (!apiKey) {
     return {
       statusCode: 500,
@@ -439,6 +491,13 @@ exports.handler = async function (event) {
         }
       }
     }
+
+    // Resolve every image_query to a real, content-matching photo before
+    // sending the prototype to the browser. This is what fixes the
+    // "deer photo for an e-commerce app" problem — the browser no longer
+    // guesses an image from the query text, it receives an already-correct
+    // photo URL that Pexels matched to the actual query.
+    await resolveImages(parsed.screens, pexelsApiKey);
 
     return {
       statusCode: 200,
