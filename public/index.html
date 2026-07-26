@@ -674,6 +674,18 @@ function photoUrl(component, w, h){
   return `https://picsum.photos/seed/${seed}/${w}/${h}`;
 }
 
+// ============================================================
+// Component design tokens — used consistently across all kinds below
+// so spacing, elevation, and type weight read as one coherent system
+// rather than ad hoc per-component choices.
+// ============================================================
+const CARD_SHADOW = '0 1px 2px rgba(23,19,11,.04), 0 4px 12px -6px rgba(23,19,11,.10)';
+const CARD_SHADOW_HOVER = '0 2px 4px rgba(23,19,11,.06), 0 8px 20px -8px rgba(23,19,11,.16)';
+const GUTTER = 18; // horizontal page margin used by every full-width component
+const RADIUS_LG = 16;
+const RADIUS_MD = 12;
+const RADIUS_SM = 8;
+
 function componentHTML(c, accent){
   switch(c.kind){
     case 'header':
@@ -683,24 +695,47 @@ function componentHTML(c, accent){
       if(c.style==='caption') return `<div style="font-size:12px;color:#8a8578;padding:0 20px 8px;">${c.text}</div>`;
       return `<div style="font-size:14px;line-height:1.5;padding:0 20px 12px;color:#3a352a;">${c.text}</div>`;
     case 'card':
-      return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 16px 12px;padding:12px;border-radius:16px;background:#F7F5EF;border:1px solid rgba(23,19,11,.08);display:flex;gap:12px;align-items:center;cursor:${c.navTo?'pointer':'default'};">
-        <div style="width:56px;height:56px;border-radius:12px;overflow:hidden;flex-shrink:0;background:#fff;"><img src="${photoUrl(c, 112, 112)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.title||''}" loading="lazy"></div>
-        <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:14.5px;">${c.title}</div><div style="font-size:12.5px;color:#8a8578;margin-top:2px;">${c.subtitle||''}</div></div>
-        ${c.navTo?`<div style="color:${accent};font-size:16px;">›</div>`:''}
+      return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 ${GUTTER}px 12px;padding:12px;border-radius:${RADIUS_LG}px;background:#fff;box-shadow:${CARD_SHADOW};display:flex;gap:12px;align-items:center;cursor:${c.navTo?'pointer':'default'};transition:box-shadow .15s ease,transform .15s ease;">
+        <div style="width:56px;height:56px;border-radius:${RADIUS_MD}px;overflow:hidden;flex-shrink:0;background:#F0EEE6;"><img src="${photoUrl(c, 112, 112)}" style="width:100%;height:100%;object-fit:cover;" alt="${c.title||''}" loading="lazy"></div>
+        <div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:14.5px;letter-spacing:-.01em;">${c.title}</div><div style="font-size:12.5px;color:#8a8578;margin-top:3px;font-weight:500;">${c.subtitle||''}</div></div>
+        ${c.navTo?`<div style="color:${accent};font-size:17px;font-weight:600;flex-shrink:0;">›</div>`:''}
       </div>`;
     case 'button':{
       const primary = c.style !== 'secondary';
-      return `<div style="padding:6px 20px 12px;"><button class="gbtn" data-nav="${c.navTo||''}" style="width:100%;padding:14px;border-radius:100px;border:${primary?'none':'1.5px solid rgba(23,19,11,.15)'};background:${primary?accent:'transparent'};color:${primary?'#fff':'#17130B'};font-weight:600;font-size:14px;font-family:'Inter',sans-serif;cursor:pointer;">${c.label}</button></div>`;
+      return `<div style="padding:6px ${GUTTER+2}px 12px;"><button class="gbtn" data-nav="${c.navTo||''}" style="width:100%;padding:14px;border-radius:100px;border:${primary?'none':'1.5px solid rgba(23,19,11,.15)'};background:${primary?accent:'transparent'};color:${primary?'#fff':'#17130B'};font-weight:700;font-size:14px;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:-.01em;box-shadow:${primary?'0 2px 8px -2px '+accent+'66':'none'};transition:transform .1s ease,box-shadow .1s ease;" onmousedown="this.style.transform='scale(.97)'" onmouseup="this.style.transform='scale(1)'" onmouseleave="this.style.transform='scale(1)'">${c.label}</button></div>`;
     }
     case 'input':
-      return `<div style="padding:0 20px 12px;"><div style="padding:13px 16px;border-radius:12px;background:#F7F5EF;border:1px solid rgba(23,19,11,.1);color:#8a8578;font-size:13.5px;">${c.placeholder}</div></div>`;
-    case 'list_row':
-      return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 16px;padding:14px 4px;border-bottom:1px solid rgba(23,19,11,.08);display:flex;justify-content:space-between;align-items:center;cursor:${c.navTo?'pointer':'default'};">
-        <div><div style="font-weight:600;font-size:14px;">${c.title}</div><div style="font-size:12px;color:#8a8578;margin-top:2px;">${c.subtitle||''}</div></div>
-        <div style="font-size:12.5px;color:${accent};font-weight:600;">${c.trailing||(c.navTo?'›':'')}</div>
+      return `<div style="padding:0 ${GUTTER+2}px 12px;"><div style="padding:13px 16px;border-radius:${RADIUS_MD}px;background:#F7F5EF;border:1px solid rgba(23,19,11,.1);color:#8a8578;font-size:13.5px;">${c.placeholder}</div></div>`;
+    case 'quantity_stepper':{
+      const qty = c.quantity || 1;
+      const stepperId = 'qty_' + Math.random().toString(36).slice(2,8);
+      return `<div style="margin:0 ${GUTTER}px 10px;padding:12px 14px;border-radius:${RADIUS_MD}px;background:#fff;box-shadow:${CARD_SHADOW};display:flex;align-items:center;gap:12px;">
+        ${c.title?`<div style="flex:1; min-width:0;"><div style="font-weight:700;font-size:13.5px;">${c.title}</div>${c.subtitle?`<div style="font-size:11.5px;color:#8a8578;margin-top:2px;">${c.subtitle}</div>`:''}</div>`:'<div style="flex:1;"></div>'}
+        <div style="display:flex; align-items:center; gap:0; background:#F7F5EF; border-radius:100px; padding:2px;">
+          <button type="button" style="width:28px;height:28px;border-radius:50%;border:none;background:#fff;box-shadow:0 1px 2px rgba(23,19,11,.12);font-size:15px;font-weight:700;cursor:pointer;color:${accent};" onclick="const el=document.getElementById('${stepperId}'); let v=parseInt(el.textContent); if(v>1){el.textContent=v-1;}">−</button>
+          <span id="${stepperId}" style="width:32px;text-align:center;font-weight:700;font-size:13.5px;">${qty}</span>
+          <button type="button" style="width:28px;height:28px;border-radius:50%;border:none;background:${accent};box-shadow:0 1px 2px rgba(23,19,11,.12);font-size:15px;font-weight:700;cursor:pointer;color:#fff;" onclick="const el=document.getElementById('${stepperId}'); el.textContent=parseInt(el.textContent)+1;">+</button>
+        </div>
       </div>`;
-    case 'stat':
-      return `<div style="display:inline-block;padding:14px 18px;margin:0 8px 12px 20px;background:#F7F5EF;border-radius:14px;text-align:center;"><div style="font-weight:800;font-size:20px;font-family:'Space Grotesk',sans-serif;">${c.value}</div><div style="font-size:11px;color:#8a8578;margin-top:2px;">${c.label}</div></div>`;
+    }
+    case 'list_row':
+      return `<div class="gcard" data-nav="${c.navTo||''}" style="margin:0 ${GUTTER}px;padding:14px 4px;border-bottom:1px solid rgba(23,19,11,.07);display:flex;justify-content:space-between;align-items:center;cursor:${c.navTo?'pointer':'default'};">
+        <div><div style="font-weight:700;font-size:14px;letter-spacing:-.01em;">${c.title}</div><div style="font-size:12px;color:#8a8578;margin-top:3px;font-weight:500;">${c.subtitle||''}</div></div>
+        <div style="font-size:12.5px;color:${accent};font-weight:700;flex-shrink:0;margin-left:12px;">${c.trailing||(c.navTo?'›':'')}</div>
+      </div>`;
+    case 'stat':{
+      // If the value looks like a star rating (e.g. "4.8" or "4.8 stars"),
+      // render actual star glyphs instead of showing raw text — reads as a
+      // real rating widget rather than a generic number.
+      const ratingMatch = String(c.value).match(/^(\d(?:\.\d)?)\s*(★|stars?)$/i);
+      let valueHTML = c.value;
+      if(ratingMatch){
+        const rating = parseFloat(ratingMatch[1]);
+        const full = Math.round(rating);
+        valueHTML = `<span style="letter-spacing:1px;">${'★'.repeat(Math.min(full,5))}${'☆'.repeat(Math.max(5-full,0))}</span> <span style="font-size:13px;font-weight:700;color:#8a8578;">${rating}</span>`;
+      }
+      return `<div style="display:inline-block;padding:14px 18px;margin:0 8px 12px ${GUTTER}px;background:#fff;box-shadow:${CARD_SHADOW};border-radius:${RADIUS_MD}px;text-align:center;"><div style="font-weight:800;font-size:${ratingMatch?15:20}px;font-family:'Space Grotesk',sans-serif;color:${ratingMatch?'#D4A017':'inherit'};">${valueHTML}</div><div style="font-size:11px;color:#8a8578;margin-top:3px;font-weight:600;">${c.label}</div></div>`;
+    }
     case 'image_banner':{
       const height = c.full_bleed ? 220 : 140;
       const margin = c.full_bleed ? '0 0 14px' : '0 16px 14px';
@@ -726,13 +761,37 @@ function componentHTML(c, accent){
       return `<div style="height:14px;"></div>`;
     case 'tabbar':{
       const items = c.items || [];
-      const icons = ['⌂','◎','▤','♡','☰'];
-      return `<div style="position:sticky;bottom:0;background:#fff;border-top:1px solid rgba(23,19,11,.08);display:flex;padding:10px 0 8px;margin-top:auto;">
+      // Icon chosen by matching the tab label's meaning, not just position —
+      // reads as intentional rather than a generic repeating icon set.
+      const ICON_MAP = {
+        home:'⌂', explore:'◎', search:'⚲', discover:'◎', browse:'▤',
+        cart:'⛃', bag:'⛃', shop:'⛃', orders:'▤', order:'▤', bookings:'▤', booking:'▤', trips:'▤',
+        chat:'✉', messages:'✉', message:'✉', inbox:'✉', activity:'◔',
+        profile:'◉', account:'◉', you:'◉', me:'◉',
+        favorites:'♡', wishlist:'♡', saved:'♡', likes:'♡',
+        dashboard:'▦', analytics:'▦', stats:'▦',
+        cards:'▭', wallet:'▭', payments:'▭', payment:'▭', billing:'▭',
+        groups:'◈', community:'◈', social:'◈',
+        post:'+', add:'+', record:'●',
+        map:'⚑', tracking:'⚑', track:'⚑', nearby:'⚑',
+      };
+      function iconFor(label, idx){
+        const key = (label||'').toLowerCase().trim();
+        if(ICON_MAP[key]) return ICON_MAP[key];
+        // word-boundary match only — prevents short keys like "me" or "you"
+        // from falsely matching inside unrelated words like "payment".
+        const words = key.split(/[\s_-]+/);
+        for(const w of words) if(ICON_MAP[w]) return ICON_MAP[w];
+        return ['⌂','◎','▤','◉','☰'][idx % 5];
+      }
+      return `<div style="position:sticky;bottom:0;background:#fff;border-top:1px solid rgba(23,19,11,.08);display:flex;padding:8px 0 8px;margin-top:auto;box-shadow:0 -2px 12px -6px rgba(23,19,11,.06);">
         ${items.map((it,idx)=>{
           const navId = (c.navMap && c.navMap[it]) || '';
-          return `<div class="gcard" data-nav="${navId}" style="flex:1;text-align:center;cursor:${navId?'pointer':'default'};">
-            <div style="font-size:17px;">${icons[idx%icons.length]}</div>
-            <div style="font-size:10px;margin-top:2px;color:#5a5548;font-weight:600;">${it}</div>
+          const isActive = navId && navId === (window.__gcurrentScreenId || '');
+          return `<div class="gcard gtab" data-nav="${navId}" style="flex:1;text-align:center;cursor:${navId?'pointer':'default'};position:relative;padding-top:2px;">
+            ${isActive?`<div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:22px;height:3px;border-radius:0 0 3px 3px;background:${accent};"></div>`:''}
+            <div style="font-size:18px;color:${isActive?accent:'#8a8578'};transition:color .15s ease;">${iconFor(it, idx)}</div>
+            <div style="font-size:10px;margin-top:3px;color:${isActive?accent:'#8a8578'};font-weight:${isActive?'800':'600'};transition:color .15s ease;">${it}</div>
           </div>`;
         }).join('')}
       </div>`;
@@ -745,6 +804,7 @@ function renderScreen(screenId){
   const screen = appData.screens.find(s=>s.id===screenId);
   if(!screen) return;
   currentScreenId = screenId;
+  window.__gcurrentScreenId = screenId;
   const accent = appData.primaryColor || '#FF5A36';
   const frame = document.getElementById('appFrame');
   const hasTabbar = screen.components.some(c=>c.kind==='tabbar');
