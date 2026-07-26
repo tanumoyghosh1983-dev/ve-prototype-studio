@@ -388,6 +388,10 @@ footer .wrap{display:flex; justify-content:space-between; align-items:center; fo
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/></svg>
           Start over
         </button>
+        <button class="btn-secondary" id="shareLinkBtn" onclick="startShareLink()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 0 6c.35 0 .68-.06 1-.17M6 15a3 3 0 1 0 2.83 4H9a3 3 0 0 0 0-6c-.35 0-.68.06-1 .17M8.6 10.5l6.8-3.9M8.6 13.5l6.8 3.9"/></svg>
+          <span id="shareLinkLabel">Copy share link</span>
+        </button>
         <button class="btn-primary-sm" onclick="downloadPrototype()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v13m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
           Download prototype
@@ -854,6 +858,48 @@ function resetTool(){
   document.getElementById('promptInput').value = '';
   document.getElementById('promptInput').focus();
   window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function startShareLink(){
+  if(!appData) return;
+  const btn = document.getElementById('shareLinkBtn');
+  const label = document.getElementById('shareLinkLabel');
+  const originalLabel = label.textContent;
+  btn.disabled = true;
+  label.textContent = 'Creating link…';
+
+  try{
+    const res = await fetch('/.netlify/functions/save-prototype', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ prototype: appData })
+    });
+    const data = await res.json();
+
+    if(!res.ok){
+      throw new Error(data?.error || 'Could not create a share link');
+    }
+
+    const shareUrl = window.location.origin + '/p.html?id=' + data.id;
+
+    try{
+      await navigator.clipboard.writeText(shareUrl);
+      label.textContent = 'Link copied!';
+    }catch(clipErr){
+      // Clipboard API can fail (permissions, insecure context) — fall back
+      // to showing the link so the person can copy it manually instead of
+      // silently failing.
+      window.prompt('Copy this link to share your prototype:', shareUrl);
+      label.textContent = 'Link ready';
+    }
+
+    setTimeout(()=>{ label.textContent = originalLabel; btn.disabled = false; }, 2500);
+
+  }catch(err){
+    console.error(err);
+    label.textContent = 'Could not create link';
+    setTimeout(()=>{ label.textContent = originalLabel; btn.disabled = false; }, 2500);
+  }
 }
 
 function downloadPrototype(){
