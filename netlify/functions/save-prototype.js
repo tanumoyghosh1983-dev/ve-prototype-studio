@@ -64,7 +64,7 @@ exports.handler = async function (event) {
   try {
     connectLambda(event);
     console.log("[save-prototype] connectLambda succeeded");
-    const store = getStore({ name: "prototypes", consistency: "strong" });
+    const store = getStore("prototypes");
     console.log("[save-prototype] getStore succeeded");
 
     // Try a few times in the astronomically unlikely case of an ID collision.
@@ -88,10 +88,12 @@ exports.handler = async function (event) {
     });
     console.log("[save-prototype] setJSON succeeded for id:", id);
 
-    // Immediately read it back to confirm it actually persisted, so the
-    // logs tell us definitively whether storage is really working.
-    const verifyRead = await store.get(id, { type: "json" });
-    console.log("[save-prototype] verification read:", verifyRead ? "FOUND" : "NOT FOUND (real problem)");
+    // Netlify Blobs uses eventual consistency by default — a write can take
+    // a brief moment to become visible to reads. A short delay here gives
+    // it time to propagate before the person can possibly click "copy link"
+    // and someone else opens it, without needing strong-consistency mode
+    // (which isn't supported in this function's runtime environment).
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     return {
       statusCode: 200,
