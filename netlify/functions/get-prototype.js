@@ -33,8 +33,10 @@ exports.handler = async function (event) {
 
   try {
     connectLambda(event);
+    console.log("[get-prototype] connectLambda succeeded, looking up id:", id);
     const store = getStore("prototypes");
     const record = await store.get(id, { type: "json" });
+    console.log("[get-prototype] lookup result:", record ? "FOUND" : "NOT FOUND");
 
     if (!record) {
       return {
@@ -50,6 +52,7 @@ exports.handler = async function (event) {
       body: JSON.stringify(record.prototype),
     };
   } catch (err) {
+    console.log("[get-prototype] ERROR:", err.message, err.stack);
     return {
       statusCode: 502,
       headers,
