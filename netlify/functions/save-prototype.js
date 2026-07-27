@@ -64,7 +64,7 @@ exports.handler = async function (event) {
   try {
     connectLambda(event);
     console.log("[save-prototype] connectLambda succeeded");
-    const store = getStore("prototypes");
+    const store = getStore({ name: "prototypes", consistency: "strong" });
     console.log("[save-prototype] getStore succeeded");
 
     // Try a few times in the astronomically unlikely case of an ID collision.
