@@ -299,23 +299,56 @@ async function loadSharedPrototype(){
     return;
   }
 
-  try{
-    const res = await fetch('/.netlify/functions/get-prototype?id=' + encodeURIComponent(id));
-    const data = await res.json();
+  // A freshly-created link can occasionally take a little while to become
+  // available (the underlying storage needs a moment to fully sync). Retry
+  // a handful of times with increasing waits before treating it as a real
+  // failure, and keep the person honestly informed while it happens rather
+  // than showing a scary error on the very first attempt.
+  const RETRY_DELAYS_MS = [1000, 2000, 4000, 8000, 15000, 30000, 60000];
+  let lastErrorMessage = 'This link may be broken or expired.';
 
-    if(!res.ok){
-      main.innerHTML = `<div class="state-box">
-        <div class="icon">😕</div>
-        <h2>Couldn't load this prototype</h2>
-        <p>${data.error || 'This link may be broken or expired.'}</p>
-        <a href="/">Build your own prototype</a>
-      </div>`;
-      return;
+  for(let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++){
+    try{
+      const res = await fetch('/.netlify/functions/get-prototype?id=' + encodeURIComponent(id));
+      const data = await res.json();
+
+      if(res.ok){
+        appData = data;
+        renderSharedPrototype();
+        return;
+      }
+
+      lastErrorMessage = data.error || lastErrorMessage;
+
+      // 404 specifically can mean "not synced yet" — worth retrying.
+      // Any other error status, don't keep retrying pointlessly.
+      if(res.status !== 404){
+        break;
+      }
+    }catch(err){
+      lastErrorMessage = 'Something went wrong while loading. Please try again.';
     }
 
-    appData = data;
+    if(attempt < RETRY_DELAYS_MS.length){
+      main.innerHTML = `<div class="state-box">
+        <div class="loading-dot"></div>
+        <p style="margin-top:14px;">This link was just created and is still becoming available — checking again in a moment…</p>
+      </div>`;
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+    }
+  }
 
-    main.innerHTML = `
+  main.innerHTML = `<div class="state-box">
+    <div class="icon">😕</div>
+    <h2>Couldn't load this prototype</h2>
+    <p>${lastErrorMessage} If this link was just created, please wait a minute and try opening it again.</p>
+    <a href="/">Build your own prototype</a>
+  </div>`;
+}
+
+function renderSharedPrototype(){
+  const main = document.getElementById('mainContent');
+  main.innerHTML = `
       <div class="share-meta">
         <div class="eyebrow">Shared prototype</div>
         <h1>${appData.appName || 'App Prototype'}</h1>
@@ -338,16 +371,7 @@ async function loadSharedPrototype(){
       </div>
     `;
 
-    navTo(appData.startScreen, true, true);
-
-  }catch(err){
-    main.innerHTML = `<div class="state-box">
-      <div class="icon">😕</div>
-      <h2>Something went wrong</h2>
-      <p>We couldn't load this prototype right now. Please try again.</p>
-      <a href="/">Build your own prototype</a>
-    </div>`;
-  }
+  navTo(appData.startScreen, true, true);
 }
 
 loadSharedPrototype();
