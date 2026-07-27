@@ -63,7 +63,9 @@ exports.handler = async function (event) {
 
   try {
     connectLambda(event);
+    console.log("[save-prototype] connectLambda succeeded");
     const store = getStore("prototypes");
+    console.log("[save-prototype] getStore succeeded");
 
     // Try a few times in the astronomically unlikely case of an ID collision.
     let id;
@@ -78,11 +80,18 @@ exports.handler = async function (event) {
     if (!id) {
       throw new Error("Could not generate a unique ID");
     }
+    console.log("[save-prototype] generated id:", id);
 
     await store.setJSON(id, {
       prototype,
       createdAt: new Date().toISOString(),
     });
+    console.log("[save-prototype] setJSON succeeded for id:", id);
+
+    // Immediately read it back to confirm it actually persisted, so the
+    // logs tell us definitively whether storage is really working.
+    const verifyRead = await store.get(id, { type: "json" });
+    console.log("[save-prototype] verification read:", verifyRead ? "FOUND" : "NOT FOUND (real problem)");
 
     return {
       statusCode: 200,
@@ -90,6 +99,7 @@ exports.handler = async function (event) {
       body: JSON.stringify({ id }),
     };
   } catch (err) {
+    console.log("[save-prototype] ERROR:", err.message, err.stack);
     return {
       statusCode: 502,
       headers,
